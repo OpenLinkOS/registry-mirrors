@@ -1,0 +1,111 @@
+version: '3'
+
+services:
+  registry-dockerhub:
+    container_name: registry-dockerhub
+    image: registry:latest
+    restart: always
+    volumes:
+      - ./registry-dockerhub.yml:/etc/docker/registry/config.yml
+      - /data/registry:/var/lib/registry
+    ports:
+      - 5001:5000
+    networks:
+      - registry-net
+
+  registry-gcr:
+    container_name: registry-gcr
+    image: registry:latest
+    restart: always
+    volumes:
+      - ./registry-gcr.yml:/etc/docker/registry/config.yml
+      - /data/registry:/var/lib/registry
+    ports:
+      - 5002:5000
+    networks:
+      - registry-net
+
+  registry-ghcr:
+    container_name: registry-ghcr
+    image: registry:latest
+    restart: always
+    volumes:
+      - ./registry-ghcr.yml:/etc/docker/registry/config.yml
+      - /data/registry:/var/lib/registry
+    ports:
+      - 5003:5000
+    networks:
+      - registry-net
+
+  registry-k8s:
+    container_name: registry-k8s
+    image: registry:latest
+    restart: always
+    volumes:
+      - ./registry-k8s.yml:/etc/docker/registry/config.yml
+      - /data/registry:/var/lib/registry
+    ports:
+      - 5004:5000
+    networks:
+      - registry-net
+
+  registry-quay:
+    container_name: registry-quay
+    image: registry:latest
+    restart: always
+    volumes:
+      - ./registry-quay.yml:/etc/docker/registry/config.yml
+      - /data/registry:/var/lib/registry
+    ports:
+      - 5005:5000
+    networks:
+      - registry-net
+
+  registry-local:
+    container_name: registry-local
+    image: registry:latest
+    restart: always
+    volumes:
+      - ./registry-local.yml:/etc/docker/registry/config.yml
+      - /data/registry:/var/lib/registry
+    networks:
+      - registry-net
+
+  registry-ui:
+    container_name: registry-ui
+    image: joxit/docker-registry-ui:latest
+    restart: always
+    links:
+      - registry-local:registry-local
+    ports:
+      - 5080:80
+    environment:
+      - REGISTRY_TITLE=LinkOS Registry Mirrors
+      - NGINX_PROXY_PASS_URL=http://registry-local:5000
+      - DELETE_IMAGES=false
+      - SHOW_CONTENT_DIGEST=true
+      - SINGLE_REGISTRY=true
+    networks:
+      - registry-net
+
+  registry-admin-ui:
+    container_name: registry-admin-ui
+    image: joxit/docker-registry-ui:latest
+    restart: always
+    links:
+      - registry-local:registry-local
+    ports:
+      - 5180:80
+    environment:
+      - REGISTRY_TITLE=LinkOS Registry Mirrors
+      - NGINX_PROXY_PASS_URL=http://registry-local:5000
+      - DELETE_IMAGES=true
+      - SHOW_CONTENT_DIGEST=true
+      - SINGLE_REGISTRY=true
+    networks:
+      - registry-net
+
+networks:
+  registry-net:
+    name: registry-net
+    driver: bridge
